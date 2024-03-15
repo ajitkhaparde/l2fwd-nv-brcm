@@ -62,7 +62,6 @@ struct rte_pktmbuf_extmem ext_mem;
 static struct rte_eth_conf conf_eth_port = {
 	.rxmode = {
 		.mq_mode = RTE_ETH_MQ_RX_RSS,
-		.split_hdr_size = 0,
 		.offloads = RTE_ETH_RX_OFFLOAD_BUFFER_SPLIT, // Required by buffer split feature
 	},
 	.txmode = {
