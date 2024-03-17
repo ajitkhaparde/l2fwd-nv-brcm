@@ -220,6 +220,8 @@ int l2fwd_parse_workload(const char *q_arg)
 		return GPU_PK_WORKLOAD;
 	if (n == 4)
 		return GPU_GRAPHS_WORKLOAD;
+	if (n == 5)
+		return GPU_MAC_IP_WORKLOAD;
 
 	return NO_WORKLOAD;
 }

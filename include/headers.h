@@ -112,6 +112,9 @@ void workload_launch_persistent_gpu_processing(struct rte_gpu_comm_list * comm_i
 void workload_launch_gpu_graph_processing(struct rte_gpu_comm_list * comm_item, uint64_t wtime_n,
 		int cuda_blocks, int cuda_threads, cudaStream_t stream);
 
+void workload_launch_gpu_ip_processing(struct rte_gpu_comm_list * comm_list, uint64_t wtime_n,
+		int cuda_blocks, int cuda_threads, cudaStream_t stream);
+
 /////////////////////////////////////////////////////////////////
 // Command Line Options
 /////////////////////////////////////////////////////////////////
