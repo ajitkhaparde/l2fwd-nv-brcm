@@ -200,6 +200,8 @@ void print_opts(void)
 			printf("Workload type = GPU Persistent kernel\n");
 		if (conf_workload == GPU_GRAPHS_WORKLOAD)
 			printf("Workload type = GPU CUDA Graphs kernel\n");
+		if (conf_workload == GPU_MAC_IP_WORKLOAD)
+			printf("Workload type = GPU Regular kernel\n");
 		if (workload_with_gpu(conf_workload) || conf_mem_type == MEM_DEVMEM) {
 			CUDA_CHECK(cudaSetDevice(conf_gpu_id));
 			cuda_ret = cudaGetDeviceProperties(&deviceProp, conf_gpu_id);
@@ -497,6 +499,11 @@ static int rx_core(void *arg)
 		} else if (p_v->workload_type == GPU_WORKLOAD) {
 			PUSH_RANGE("macswap_gpu", 4);
 			workload_launch_gpu_processing(&(p_v->comm_list[bindex]), conf_pktime_ns,
+								MAC_CUDA_BLOCKS, MAC_THREADS_BLOCK, p_v->c_stream);
+			POP_RANGE;
+		} else if (p_v->workload_type == GPU_MAC_IP_WORKLOAD) {
+			PUSH_RANGE("macipswap_gpu", 5);
+			workload_launch_gpu_ip_processing(&(p_v->comm_list[bindex]), conf_pktime_ns,
 								MAC_CUDA_BLOCKS, MAC_THREADS_BLOCK, p_v->c_stream);
 			POP_RANGE;
 		} else

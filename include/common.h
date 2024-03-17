@@ -76,7 +76,8 @@ enum workload_flags {
 	CPU_WORKLOAD      	= 1 << 0,
 	GPU_WORKLOAD      	= 1 << 1,
 	GPU_PK_WORKLOAD   	= 1 << 2,
-	GPU_GRAPHS_WORKLOAD = 1 << 3
+	GPU_GRAPHS_WORKLOAD = 1 << 3,
+	GPU_MAC_IP_WORKLOAD = 1 << 4
 };
 
 ///////////////////////////////////////////////////////////////////////////
