@@ -58,6 +58,7 @@ static std::vector<Pipeline *> pipeline_v;
 struct rte_ether_addr conf_ports_eth_addr[RTE_MAX_ETHPORTS];
 struct rte_mempool *mpool_payload, *mpool_header;
 struct rte_pktmbuf_extmem ext_mem;
+rte_iova_t buf_iova[1024];
 
 static struct rte_eth_conf conf_eth_port = {
 	.rxmode = {
@@ -686,8 +687,7 @@ int main(int argc, char **argv)
 	printf("\nDevice driver name in use: %s... \n", dev_info.driver_name);
 
 	if (strcmp(dev_info.driver_name, "mlx5_pci") != 0)
-		rte_exit(EXIT_FAILURE, "Non-Mellanox NICs have not been validated in l2fwd-nv\n");
-		// conf_eth_port.rx_adv_conf.rss_conf.rss_hf = ETH_RSS_IP;
+		conf_eth_port.rx_adv_conf.rss_conf.rss_hf = RTE_ETH_RSS_IPV4 | RTE_ETH_RSS_NONFRAG_IPV4_UDP | RTE_ETH_RSS_IPV6 | RTE_ETH_RSS_NONFRAG_IPV4_TCP;
 
 	nb_gpus = rte_gpu_count_avail();
 	printf("\n\nDPDK found %d GPUs:\n", nb_gpus);
@@ -731,14 +731,25 @@ int main(int argc, char **argv)
 		if (ext_mem.buf_ptr == NULL)
 			rte_exit(EXIT_FAILURE, "Could not allocate GPU device memory\n");
 
-		ret = rte_extmem_register(ext_mem.buf_ptr, ext_mem.buf_len, NULL, ext_mem.buf_iova, GPU_PAGE_SIZE);
+		if (strcmp(dev_info.driver_name, "mlx5_pci") != 0) {
+			int i;
+
+			ext_mem.buf_iova = (rte_iova_t)rte_gpu_mem_dma_map(conf_gpu_id, ext_mem.buf_len, ext_mem.buf_ptr);
+			for (i = 0; i < 1024; i++)
+				buf_iova[i] = ext_mem.buf_iova + (i * GPU_PAGE_SIZE);
+			ret = rte_extmem_register(ext_mem.buf_ptr, ext_mem.buf_len, buf_iova, ext_mem.buf_len / GPU_PAGE_SIZE, GPU_PAGE_SIZE);
+		} else {
+			ret = rte_extmem_register(ext_mem.buf_ptr, ext_mem.buf_len, NULL, ext_mem.buf_iova, GPU_PAGE_SIZE);
+		}
 		if (ret)
 			rte_exit(EXIT_FAILURE, "Unable to register addr 0x%p, ret %d\n", ext_mem.buf_ptr, ret);
 	}
 
-	ret = rte_dev_dma_map(dev_info.device, ext_mem.buf_ptr, ext_mem.buf_iova, ext_mem.buf_len);
-	if (ret)
-		rte_exit(EXIT_FAILURE, "Could not DMA map EXT memory\n");
+	if (strcmp(dev_info.driver_name, "mlx5_pci") == 0) {
+		ret = rte_dev_dma_map(dev_info.device, ext_mem.buf_ptr, ext_mem.buf_iova, ext_mem.buf_len);
+		if (ret)
+			rte_exit(EXIT_FAILURE, "Could not DMA map EXT memory\n");
+	}
 
 	mpool_payload = rte_pktmbuf_pool_create_extbuf("payload_mpool", conf_nb_mbufs,
 											0, 0, ext_mem.elt_size, 
@@ -910,9 +921,13 @@ int main(int argc, char **argv)
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	pipeline_v.clear();
 
-	ret = rte_dev_dma_unmap(dev_info.device, ext_mem.buf_ptr, ext_mem.buf_iova, ext_mem.buf_len);
-	if (ret)
-		rte_exit(EXIT_FAILURE, "Could not DMA unmap EXT memory\n");
+	if (strcmp(dev_info.driver_name, "mlx5_pci") == 0) {
+		ret = rte_dev_dma_unmap(dev_info.device, ext_mem.buf_ptr, ext_mem.buf_iova, ext_mem.buf_len);
+		if (ret)
+			rte_exit(EXIT_FAILURE, "Could not DMA unmap EXT memory\n");
+	} else {
+		rte_gpu_mem_dma_unmap(conf_gpu_id, ext_mem.buf_ptr);
+	}
 
 	if (conf_mem_type == MEM_HOST_PINNED) {
 		ret = rte_gpu_mem_unregister(conf_gpu_id, ext_mem.buf_ptr);

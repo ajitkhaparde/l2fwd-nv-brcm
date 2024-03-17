@@ -52,7 +52,7 @@ static constexpr uint32_t MAX_TX_QUEUE_PER_LCORE =  MAX_RX_QUEUE_PER_LCORE;
 
 /* Others */
 static constexpr uint32_t MAX_NB_STREAMS = 64;
-static constexpr uint32_t DEF_NB_MBUF = 8192;
+static constexpr uint32_t DEF_NB_MBUF = 8192 * 32;
 static constexpr uint32_t DRIVER_MIN_RX_PKTS = 4;
 static constexpr uint32_t BUFFER_SPLIT_MP0 = 60;
 static constexpr uint32_t BUFFER_SPLIT_NB_SEGS = 2;

@@ -73,7 +73,6 @@ STRING(CONCAT DPDK_DISABLED_DRIVERS
         "net/avp,"
         "net/axgbe,"
         "net/bnx2x,"
-        "net/bnxt,"
         "net/cxgbe,"
         "net/e1000,"
         "net/ena,"
