@@ -728,9 +728,12 @@ int main(int argc, char **argv)
 		if (ext_mem.buf_ptr == NULL)
 			rte_exit(EXIT_FAILURE, "Could not allocate CPU DPDK memory\n");
 
+		ext_mem.buf_iova = rte_malloc_virt2iova(ext_mem.buf_ptr);
+
 		ret = rte_gpu_mem_register(conf_gpu_id, ext_mem.buf_len, ext_mem.buf_ptr);
 		if(ret < 0)
 			rte_exit(EXIT_FAILURE, "Unable to gpudev register addr 0x%p, ret %d\n", ext_mem.buf_ptr, ret);
+		ext_mem.buf_iova = RTE_BAD_IOVA;
 	} else {
 		ext_mem.buf_iova = RTE_BAD_IOVA;
 
@@ -933,13 +936,15 @@ int main(int argc, char **argv)
 		if (ret)
 			rte_exit(EXIT_FAILURE, "Could not DMA unmap EXT memory\n");
 	} else {
-		rte_gpu_mem_dma_unmap(conf_gpu_id, ext_mem.buf_ptr);
+		if (conf_mem_type != MEM_HOST_PINNED)
+			rte_gpu_mem_dma_unmap(conf_gpu_id, ext_mem.buf_ptr);
 	}
 
 	if (conf_mem_type == MEM_HOST_PINNED) {
 		ret = rte_gpu_mem_unregister(conf_gpu_id, ext_mem.buf_ptr);
 		if(ret < 0)
 			rte_exit(EXIT_FAILURE, "rte_gpu_mem_unregister returned error %d\n", ret);
+		rte_free(ext_mem.buf_ptr);
 	} else {
 		ret = rte_gpu_mem_free(conf_gpu_id, ext_mem.buf_ptr);
 		if(ret < 0)
