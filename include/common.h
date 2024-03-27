@@ -57,6 +57,8 @@ static constexpr uint32_t DRIVER_MIN_RX_PKTS = 4;
 static constexpr uint32_t BUFFER_SPLIT_MP0 = 60;
 static constexpr uint32_t BUFFER_SPLIT_NB_SEGS = 2;
 
+static constexpr uint32_t BUFFER_SPLIT_MP1 = 2048;
+
 static constexpr uint32_t MEM_DEVMEM = 1;
 static constexpr uint32_t MEM_HOST_PINNED = 0;
 static constexpr uint32_t GAP_PKTS = 4;

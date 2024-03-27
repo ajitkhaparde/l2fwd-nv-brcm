@@ -34,6 +34,7 @@ static int conf_mempool_cache = RTE_MEMPOOL_CACHE_MAX_SIZE;
 static int conf_nb_mbufs = DEF_NB_MBUF;
 static uint64_t conf_pktime_ns = 0;
 static int conf_buffer_split = 0;
+static int reverse_buffer_split = 0;
 
 static const char short_options[] = 
 	"b:"  /* burst size */
@@ -44,6 +45,7 @@ static const char short_options[] =
 	"n"   /* Enable CUDA profiler */
 	"p:"  /* num of pipelines */
 	"s"   /* Enable buffer split */
+	"r"   /* Enable reverse buffer split */
 	"t:"  /* Force execution time per packet */
 	"v:"  /* performance packets */
 	"w:"  /* workload type */
@@ -227,6 +229,7 @@ void print_opts(void)
 
 	printf("NVTX profiler enabled = %s\n", (conf_nvprofiler == 1 ? "Yes" : "No"));
 	printf("Buffer split enabled = %s\n", (conf_buffer_split == 1 ? "Yes" : "No"));
+	printf("Reverse Buffer split enabled = %s\n", (reverse_buffer_split == 1 ? "Yes" : "No"));
 
 	printf("============================================\n\n");
 }
@@ -287,6 +290,10 @@ static int parse_args(int argc, char **argv)
 			
 			case 's':
 				conf_buffer_split = 1;
+				break;
+
+			case 'r':
+				reverse_buffer_split = 1;
 				break;
 
 			case 'n':
@@ -790,6 +797,36 @@ int main(int argc, char **argv)
 
 		rx_seg = &rx_useg[1].split;
 		rx_seg->mp = mpool_payload;
+		rx_seg->length = 0;
+		rx_seg->offset = 0;
+
+		conf_eth_port.rxmode.offloads = RTE_ETH_RX_OFFLOAD_SCATTER | RTE_ETH_RX_OFFLOAD_BUFFER_SPLIT;
+		conf_eth_port.txmode.offloads = RTE_ETH_TX_OFFLOAD_MULTI_SEGS;
+	}
+
+	if(reverse_buffer_split)
+	{
+		mpool_header = rte_pktmbuf_pool_create("sysmem_mpool_hdr", conf_nb_mbufs,
+												conf_mempool_cache, 0,
+												BUFFER_SPLIT_MP1 + RTE_PKTMBUF_HEADROOM,
+												rte_socket_id());
+		if (!mpool_header) {
+			rte_panic("Could not create sysmem mempool buffer split\n");
+		}
+
+		memcpy(&rxconf_qsplit, &dev_info.default_rxconf, sizeof(rxconf_qsplit));
+
+		rxconf_qsplit.offloads = RTE_ETH_RX_OFFLOAD_SCATTER | RTE_ETH_RX_OFFLOAD_BUFFER_SPLIT;
+		rxconf_qsplit.rx_nseg = BUFFER_SPLIT_NB_SEGS;
+		rxconf_qsplit.rx_seg = rx_useg;
+
+		rx_seg = &rx_useg[0].split;
+		rx_seg->mp = mpool_payload;
+		rx_seg->length = BUFFER_SPLIT_MP0;
+		rx_seg->offset = 0;
+
+		rx_seg = &rx_useg[1].split;
+		rx_seg->mp = mpool_header;
 		rx_seg->length = 0;
 		rx_seg->offset = 0;
 
