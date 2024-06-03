@@ -33,6 +33,13 @@ l2fwd-nv has a trivial workload that doesn't really require the use of CUDA kern
 
 ## Changelog
 
+05/31/2024
+* Updated to DPDK 24.03
+* Added patches to support and fix issues with Thor2
+* Added patches to get the physical address of the GPU memory for non-Mellanox NIC
+* Added a new option to "-w" the workload option to swap the IP address of the received packet
+* Added a new mode "-r" to perform reverse buffer split - where packet headers are DMA'ed to GPU memory and payload is DMA'ed to CPU memory
+
 03/11/2022
 
 * Updated to DPDK 22.03
