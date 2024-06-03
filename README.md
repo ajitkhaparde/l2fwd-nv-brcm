@@ -219,6 +219,7 @@ HW features:
 #### HW Topology for l2fwd-nv-brcm
 
 l2fwd-nv-brcm topology
+````
  +-[0000:4a]-+-00.0
  |           +-00.1
  |           +-00.2
@@ -232,6 +233,7 @@ l2fwd-nv-brcm topology
  |                                           |                               \-10.0-[59]----00.0
  |                                           \-0c.0-[5a-5d]----00.0-[5b-5d]--+-14.0-[5c]--
  |                                                                           \-15.0-[5d]--
+````
 
 #### l2fwd-nv machine
 
