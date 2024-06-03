@@ -173,7 +173,7 @@ Please note that, to enable GDRCopy in l2fwd-nv at runtime, you need to set the 
 l2fwd-nv with `-h` shows the usage and all the possible options
 
 ```
-./build/l2fwdnv [EAL options] -- b|c|d|e|g|m|s|t|w|B|E|N|P|W
+./build/l2fwdnv [EAL options] -- b|c|d|e|g|m|s|t|w|B|E|N|P|W|r
  -b BURST SIZE: how many pkts x burst to RX
  -d DATA ROOM SIZE: mbuf payload size
  -g GPU DEVICE: GPU device ID
@@ -183,8 +183,9 @@ l2fwd-nv with `-h` shows the usage and all the possible options
  -s BUFFER SPLIT: enable buffer split, 64B CPU, remaining bytes GPU
  -t PACKET TIME: force workload time (nanoseconds) per packet
  -v PERFORMANCE PKTS: packets to be received before closing the application. If 0, l2fwd-nv keeps running until the CTRL+C
- -w WORKLOAD TYPE: who is in charge to swap the MAC address, 0: No swap, 1: CPU, 2: GPU with one dedicated CUDA kernel for each burst of received packets, 3: GPU with a persistent CUDA kernel, 4: GPU with CUDA Graphs
+ -w WORKLOAD TYPE: who is in charge to swap the MAC address, 0: No swap, 1: CPU, 2: GPU with one dedicated CUDA kernel for each burst of received packets, 3: GPU with a persistent CUDA kernel, 4: GPU with CUDA Graphs, 5: GPU with one dedicated CUDA kernel for each burst of received packets and also performs IP address swap
  -z WARMUP PKTS: wait this amount of packets before starting to measure performance
+ -r (REVERSE) BUFFER SPLIT: enable buffer split, 64B DMA happens to GPU, remaining bytes to CPU
 ```
 
 To run l2fwd-nv in an infinite loop options `-z` and `-w` must be set to 0.
@@ -200,6 +201,37 @@ Benchmarks executed with between two different machines connected back-to-back,
 one with l2fwd-nv and the other with testpmd.
 
 We didn't observe any performance regression upgrading from DPDK 21.11 to DPDK 22.03.
+
+#### l2fwd-nv-brcm system
+HW features:
+* NVIDIA GPU A100-PCIE-80GB
+* Supermicro Motherboard-X12 Series
+* Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
+* Broadcom BCM57508 NetXtreme-E Ethernet Controller
+* Broadcom BCM57608 NetXtreme-E Ethernet Controller
+
+#### OS and SW information
+* CUDA V12.2.140
+* DPDK version 24.03
+* Kernel 5.14.0-284.30.1.el9_2.x86_64
+* Red Hat Enterprise Linux release 9.2 (Plow)
+
+#### HW Topology for l2fwd-nv-brcm
+
+l2fwd-nv-brcm topology
+ +-[0000:4a]-+-00.0
+ |           +-00.1
+ |           +-00.2
+ |           +-00.4
+ |           \-02.0-[4b-5d]----00.0-[4c-5d]--+-00.0-[4d-50]----00.0-[4e-50]----10.0-[4f-50]--+-00.0
+ |                                           |                                               \-00.1
+ |                                           +-04.0-[51-54]----00.0-[52-54]--+-00.0-[53]--
+ |                                           |                               \-10.0-[54]--+-00.0
+ |                                           |                                            \-00.1
+ |                                           +-08.0-[55-59]----00.0-[56-59]--+-00.0-[57-58]----00.0
+ |                                           |                               \-10.0-[59]----00.0
+ |                                           \-0c.0-[5a-5d]----00.0-[5b-5d]--+-14.0-[5c]--
+ |                                                                           \-15.0-[5d]--
 
 #### l2fwd-nv machine
 
