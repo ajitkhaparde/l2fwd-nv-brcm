@@ -204,7 +204,7 @@ We didn't observe any performance regression upgrading from DPDK 21.11 to DPDK 2
 
 #### l2fwd-nv-brcm system
 HW features:
-* NVIDIA GPU A100-PCIE-80GB
+* NVIDIA GPU A100-PCIE-40GB
 * Supermicro Motherboard-X12 Series
 * Intel(R) Xeon(R) Platinum 8358 CPU @ 2.60GHz
 * Broadcom BCM57508 NetXtreme-E Ethernet Controller
